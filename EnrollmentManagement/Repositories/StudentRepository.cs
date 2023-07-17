@@ -139,7 +139,6 @@ namespace EnrollmentManagement.Repositories
             var result = await dbContext.Students.ToListAsync();
             return mapper.Map<List<StudentsDTO>>(result);
         }
-
         public async Task<ResultModel> UpdateStudentAsync(string StudentId, RegisterModel model)
         {
             try

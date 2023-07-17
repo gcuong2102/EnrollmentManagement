@@ -1,4 +1,6 @@
-﻿using EnrollmentManagement.Entity_Data;
+﻿using AutoMapper;
+using EnrollmentManagement.DTO;
+using EnrollmentManagement.Entity_Data;
 using EnrollmentManagement.Identity_Application;
 using EnrollmentManagement.Models;
 using EnrollmentManagement.RepositoriesInterface;
@@ -12,11 +14,15 @@ namespace EnrollmentManagement.Repositories
     {
         private readonly RoleManager<ApplicationRole> roleManager;
         private readonly EnrollmentManagementDbContext dbContext;
+        private readonly IMapper mapper;
+        private readonly UserManager<ApplicationUser> userManger;
 
-        public RoleRepository(RoleManager<ApplicationRole> roleManager, EnrollmentManagementDbContext dbContext) 
+        public RoleRepository(RoleManager<ApplicationRole> roleManager, EnrollmentManagementDbContext dbContext, IMapper mapper, UserManager<ApplicationUser> userManager) 
         {
             this.roleManager = roleManager;
             this.dbContext = dbContext;
+            this.mapper = mapper;
+            this.userManger = userManager;
         }
         public async Task<List<ApplicationRole>> GetAllRolesAsync()
         {
@@ -48,15 +54,40 @@ namespace EnrollmentManagement.Repositories
                 return new ResultModel(false, $"Có lỗi xảy ra vui lòng kiểm tra lại. Ex: {ex}");
             }
         }
-        public async Task<ApplicationRole> FindRoleByIdAsync(string roleId)
+        public async Task<RoleAndPermissionModel> FindRoleByIdAsync(string roleId)
         {
             var role = await roleManager.FindByIdAsync(roleId);
-            return role;
+            var listPermission = await dbContext.PermissionRole.Where(x=>x.RoleId == role.Id).ToListAsync();
+            var newlistPermission = new List<Permissions>();
+            foreach (var permissionRole in listPermission)
+            {
+                var permisison = await dbContext.Permissions.FindAsync(permissionRole.PermissionId);
+                newlistPermission.Add(permisison);
+            }
+            var result = new RoleAndPermissionModel() { 
+                RoleName = role.Name,
+                Description = role.Descripstion,
+                Permissions = mapper.Map<List<PermissionDTO>>(newlistPermission)
+            };
+            return result;
         }
-        public async Task<ApplicationRole> FindRoleByNameAsync(string roleName)
+        public async Task<RoleAndPermissionModel> FindRoleByNameAsync(string roleName)
         {
             var role = await roleManager.FindByNameAsync(roleName);
-            return role;
+            var listPermission = await dbContext.PermissionRole.Where(x => x.RoleId == role.Id).ToListAsync();
+            var newlistPermission = new List<Permissions>();
+            foreach (var permissionRole in listPermission)
+            {
+                var permisison = await dbContext.Permissions.FindAsync(permissionRole.PermissionId);
+                newlistPermission.Add(permisison);
+            }
+            var result = new RoleAndPermissionModel()
+            {
+                RoleName = role.Name,
+                Description = role.Descripstion,
+                Permissions = mapper.Map<List<PermissionDTO>>(newlistPermission)
+            };
+            return result;
         }
         public async Task<ResultModel> UpdateRoleAsync(string roleId, ApplicationRole role)
         {
@@ -113,6 +144,24 @@ namespace EnrollmentManagement.Repositories
                 return new ResultModel(false, ex.Message);
             }
 
+        }
+        public async Task<ResultModel> SetRoleForUserAsync(RoleUserModel model)
+        {
+            try
+            {
+                var role = await roleManager.FindByIdAsync(model.RoleId);
+                if(role == null)
+                {
+                    return new ResultModel(false, "Vui lòng kiểm tra lại tên vai trò");
+                }
+                var user = await userManger.FindByIdAsync(model.UserId);
+                await userManger.AddToRoleAsync(user, role.Name);
+                return new ResultModel(true, "Cập nhật quyền người dùng thành công");
+            }
+            catch (Exception ex)
+            {
+                return new ResultModel(false, ex.Message);
+            }
         }
     }
 }

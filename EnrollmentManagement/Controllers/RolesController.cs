@@ -39,13 +39,13 @@ namespace EnrollmentManagement.Controllers
             var rs = await repo.FindRoleByNameAsync(roleName);
             return Ok(rs);
         }
-        [HttpPost("UpdateRole")]
+        [HttpPut("UpdateRole")]
         public async Task<IActionResult> UpdateRole(RoleUpdateModel model)
         {
             var rs = await repo.UpdateRoleAsync(model.RoleId,model.Role);
             return Ok(rs);
         }
-        [HttpPost("DeleteRole")]
+        [HttpDelete("DeleteRole")]
         public async Task<IActionResult> DeleteRole(string roleId)
         {
             var rs = await repo.DeleteRoleAsync(roleId);
@@ -55,6 +55,12 @@ namespace EnrollmentManagement.Controllers
         public async Task<IActionResult> SetPermissionForRole(SetPermissionForRoleModel model)
         {
             var rs = await repo.SetPermissionForRoleAsync(model.RoleId,model.PermissionId);
+            return Ok(rs);
+        }
+        [HttpPost("SetRoleForUser")]
+        public async Task<IActionResult> SetRoleForUser(RoleUserModel model)
+        {
+            var rs = await repo.SetRoleForUserAsync(model);
             return Ok(rs);
         }
     }

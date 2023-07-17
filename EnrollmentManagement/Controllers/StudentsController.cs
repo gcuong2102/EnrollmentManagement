@@ -1,5 +1,6 @@
 ﻿using EnrollmentManagement.Models;
 using EnrollmentManagement.RepositoriesInterface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,6 +38,12 @@ namespace EnrollmentManagement.Controllers
         public async Task<IActionResult> AddStudent(RegisterModel model)
         {
             var rs = await repo.AddStudentAsync(model);
+            return Ok(rs);
+        }
+        [HttpPut("UpdateStudent")]
+        public async Task<IActionResult> UpdateStudent(string studentId,RegisterModel model)
+        {
+            var rs = await repo.UpdateStudentAsync(studentId, model);
             return Ok(rs);
         }
         [HttpPost("CollectTuitionFee")]

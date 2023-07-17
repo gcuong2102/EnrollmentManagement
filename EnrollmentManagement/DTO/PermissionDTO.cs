@@ -4,7 +4,6 @@ namespace EnrollmentManagement.DTO
 {
     public class PermissionDTO
     {
-        [Key]
         [Required]
         public long Id { get; set; }
         [Required, MaxLength(50)]
